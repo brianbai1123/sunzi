@@ -200,6 +200,28 @@ function renderCard() {
         <div class="panel ${state.tab === "plain" ? "active" : ""}" data-panel="plain">
           <div class="block"><h3>本篇场景</h3><p class="rich">${escapeHtml(h.plain.scene)}</p></div>
           <div class="block"><h3>核心深讲</h3><p class="rich">${escapeHtml(h.plain.core)}</p></div>
+          <div class="block">
+            <h3>逻辑因果链</h3>
+            <div class="chain">
+              ${h.plain.chain
+                .map(
+                  (link, i) => `
+                ${link.via ? `<div class="chain-via">↓ ${escapeHtml(link.via)}</div>` : ""}
+                <div class="chain-link">
+                  <span class="chain-num">${i + 1}</span>
+                  <div>
+                    <p class="chain-claim">${escapeHtml(link.claim)}</p>
+                    <p class="chain-detail">${escapeHtml(link.detail)}</p>
+                  </div>
+                </div>`
+                )
+                .join("")}
+            </div>
+            <div class="chain-breaks">
+              <strong>如果这条链断了</strong>
+              <ul>${h.plain.breaks.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}</ul>
+            </div>
+          </div>
           <div class="block"><h3>篇旨白话</h3><p class="rich">${escapeHtml(h.plain.plain)}</p></div>
           <div class="block"><h3>生活故事</h3><p class="rich">${escapeHtml(h.plain.story)}</p></div>
           <div class="block"><h3>深刻启发</h3><p class="rich">${escapeHtml(h.plain.wisdom)}</p></div>

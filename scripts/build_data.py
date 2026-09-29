@@ -10,8 +10,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from chapters_1_4 import C1, C2, C3, C4
 from chapters_5_8 import C5, C6, C7, C8
 from chapters_9_13 import C9, C10, C11, C12, C13
+from chains import CHAINS
 
 CHAPTERS = [C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13]
+for _c in CHAPTERS:
+    _c["plain"]["chain"] = CHAINS[_c["id"]]["chain"]
+    _c["plain"]["breaks"] = CHAINS[_c["id"]]["breaks"]
 
 ESSENTIALS = {
     "title": "兵法精要",
@@ -98,6 +102,17 @@ def main():
         for key in ("scene", "core", "plain", "story", "wisdom", "practice", "recite"):
             if not c["plain"].get(key):
                 raise SystemExit(f"{c['name']} plain.{key} empty")
+        chain = c["plain"]["chain"]
+        if len(chain) < 7:
+            raise SystemExit(f"{c['name']} chain too short")
+        if "via" in chain[0] or any(not link.get("via") for link in chain[1:]):
+            raise SystemExit(f"{c['name']} chain via: first link has none, the rest need one")
+        if any(len(link["detail"]) < 20 or not link["claim"] for link in chain):
+            raise SystemExit(f"{c['name']} chain link too thin")
+        if not chain[-1]["claim"].startswith("结果"):
+            raise SystemExit(f"{c['name']} chain must end with 结果")
+        if len(c["plain"]["breaks"]) < 2:
+            raise SystemExit(f"{c['name']} breaks too few")
         if len(c["passages"]) < 4:
             raise SystemExit(f"{c['name']} passages too few")
         if len(c["scholars"]) != 6:
