@@ -14,6 +14,20 @@ const app = document.getElementById("app");
 const searchInput = document.getElementById("searchInput");
 const LAST_KEY = "sunzi-last-chapter";
 
+function safeStorageGet(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+}
+
 async function loadData() {
   const [chapters, essence] = await Promise.all([
     fetch("data/chapters.json").then((r) => r.json()),
@@ -78,14 +92,14 @@ function go(view, id) {
     state.tab = "plain";
     state.flashIndex = 0;
     state.flashRevealed = false;
-    localStorage.setItem(LAST_KEY, String(state.currentId));
+    safeStorageSet(LAST_KEY, String(state.currentId));
   }
   render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function renderHome() {
-  const last = Number(localStorage.getItem(LAST_KEY) || 1);
+  const last = Number(safeStorageGet(LAST_KEY) || 1);
   const ch = state.chapters.find((x) => x.id === last) || state.chapters[0];
   app.innerHTML = `
     <section class="hero">
