@@ -45,3 +45,23 @@
 
 - Web 字体首次加载依赖 Google Fonts 与 jsDelivr 的网络可达性；两者不可用时会使用已声明的系统中文字体回退，不影响主题和内容功能。
 - 切换器视觉增强使用现代 CSS `:has()` 与 `color-mix()`；旧浏览器仍可通过原生 radio 和 JavaScript 切换主题，但高亮与混色效果可能降级。
+
+## Task 9 集成回归修复
+
+Task 9 发现浏览器禁止 storage 时，主题仍能应用，但 `js/app.js` 的续读读写会抛 `SecurityError`。根因是 `LAST_KEY` 的两处 `localStorage` 调用未受保护。
+
+- RED：`node --test tests/app-storage.test.mjs`
+  - 退出码 1。
+  - 1/4 通过，3/4 按预期失败：首页进入加载失败、章节写入抛错、storage 异常先于模拟业务错误抛出。
+  - 正常 storage 的续读读取与章节写入在 RED 阶段已通过。
+- 修复：新增最小 `safeStorageGet` / `safeStorageSet`，只包裹 `LAST_KEY` 的直接 storage 调用；读取异常返回默认值，写入异常安全忽略。render、路由等后续业务逻辑不在 catch 范围内。
+- GREEN：`node --test tests/*.test.mjs`
+  - 22/22 通过，0 失败。
+  - blocked storage 使用默认章节 1，章节写入流程不抛；模拟的非 storage render 错误仍原样抛出；正常续读和 `#chapter/<id>` 路由不变。
+- 本地 Chrome：在文档脚本前覆写 `Storage.prototype.getItem/setItem` 抛 `SecurityError`，打开 `/?theme=celadon`。
+  - celadon 主题与 radio 正确，首页默认续读章节为 1。
+  - 点击第二篇后进入 `#chapter/2` 并显示“作战篇”。
+  - console error 0，page error 0，storage error log 0。
+- 修复 commit：`81fce51`。
+
+新增顾虑：无。storage 不可用时无法保存续读位置属于预期降级；页面功能、主题与 hash 路由保持可用。
